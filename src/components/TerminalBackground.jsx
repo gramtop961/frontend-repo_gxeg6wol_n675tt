@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
+import CodeRain from './CodeRain'
+import CyberNetwork from './CyberNetwork'
 
-// A full-screen animated terminal background that continuously types Linux commands
+// Enhanced full-screen cyber terminal background
 export default function TerminalBackground() {
   const containerRef = useRef(null)
   const lineCountRef = useRef(0)
@@ -44,11 +47,10 @@ export default function TerminalBackground() {
       el.appendChild(line)
       lineCountRef.current += 1
       if (lineCountRef.current > 200) {
-        // Trim from the top to keep DOM light
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < 40; i++) {
           if (el.firstChild) el.removeChild(el.firstChild)
         }
-        lineCountRef.current -= 20
+        lineCountRef.current -= 40
       }
       el.scrollTop = el.scrollHeight
     }
@@ -59,30 +61,25 @@ export default function TerminalBackground() {
       el.appendChild(currentLine)
     }
 
-    // Start with an empty prompt line
     resetCurrentLine()
 
     const tick = () => {
       if (typing) {
-        // Type the prompt + command
         const full = prompt() + commands[cmdIndex]
         const toShow = full.slice(0, charIndex)
         currentLine.textContent = toShow + (charIndex % 2 === 0 ? '▂' : ' ')
-        charIndex++
+        charIndex += 1
         if (charIndex > full.length) {
           typing = false
           charIndex = 0
-          // Replace cursor with final text
           currentLine.textContent = full
         }
       } else {
-        // Emit some mocked output lines
         const outLines = Math.floor(Math.random() * 3) + 1
         for (let i = 0; i < outLines; i++) {
           const fake = generateOutput(commands[cmdIndex])
           addLine(fake)
         }
-        // Newline and move to next command
         addLine('')
         cmdIndex = (cmdIndex + 1) % commands.length
         typing = true
@@ -90,32 +87,39 @@ export default function TerminalBackground() {
       }
     }
 
-    const interval = setInterval(tick, 40)
+    const interval = setInterval(tick, 36)
     return () => clearInterval(interval)
   }, [])
 
   return (
     <div className="fixed inset-0 -z-10 bg-black">
-      {/* subtle vignette */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.06),transparent_60%)]" />
-      {/* scanlines */}
-      <div className="pointer-events-none absolute inset-0 opacity-[0.06] bg-[linear-gradient(to_bottom,rgba(255,255,255,0.3)_1px,transparent_1px)] bg-[size:100%_3px]" />
+      {/* Cyber layers */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.05),transparent_60%)]" />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.05] bg-[linear-gradient(to_bottom,rgba(255,255,255,0.25)_1px,transparent_1px)] bg-[size:100%_3px]" />
 
-      {/* terminal stream container */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div ref={containerRef} className="h-full w-full overflow-y-auto px-4 sm:px-12 py-10 text-neutral-300/80">
-          {/* content appended via DOM for performance */}
-        </div>
+      {/* Animated network scene */}
+      <div className="absolute inset-0 opacity-70">
+        <CyberNetwork />
       </div>
 
-      {/* subtle blur layer to push background behind content */}
+      {/* Terminal stream container */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div ref={containerRef} className="h-full w-full overflow-y-auto px-4 sm:px-12 py-10 text-neutral-300/80" />
+      </div>
+
+      {/* Code rain subtle layer */}
+      <div className="absolute inset-0 mix-blend-screen opacity-30">
+        <CodeRain />
+      </div>
+
+      {/* vignette and slight blur */}
       <div className="absolute inset-0 backdrop-blur-[1px]" />
+      <motion.div className="absolute inset-0" initial={{ opacity: 0 }} animate={{ opacity: [0, 0.2, 0.15] }} transition={{ duration: 1.2 }} />
     </div>
   )
 }
 
 function generateOutput(cmd) {
-  // Extremely lightweight fake outputs that look plausible yet generic
   const now = new Date().toISOString().replace('T', ' ').slice(0, 19)
   const samples = [
     `${now} kernel: audit: type=1100 id=${Math.floor(Math.random()*9999)} res=success`,
@@ -123,8 +127,8 @@ function generateOutput(cmd) {
     `${now} systemd[1]: Started ${cmd.split(' ')[0]} service`,
     `${now} nginx[${100 + Math.floor(Math.random()*900)}]: 200 GET /healthz 127.0.0.1`,
     `${now} CRON[${Math.floor(Math.random()*5000)}]: (root) CMD (run-parts /etc/cron.hourly)`,
-    `${now} kernel: Intrusion detection baseline OK`,
-    `${now} app: scan completed, findings: 0 critical, 0 high, ${Math.floor(Math.random()*3)} medium, ${Math.floor(Math.random()*7)} low`,
+    `${now} IDS: anomaly-score=${Math.floor(Math.random()*100)} src=203.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)} dst=10.0.0.${Math.floor(Math.random()*200)}`,
+    `${now} CI/CD: build #${Math.floor(Math.random()*500)} passed in ${(20+Math.random()*200).toFixed(1)}s`,
   ]
   return samples[Math.floor(Math.random() * samples.length)]
 }
